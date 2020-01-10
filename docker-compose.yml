@@ -1,0 +1,8 @@
+version: '3'
+services:
+  ece566:
+    network_mode: host
+    privileged: true
+    build: .
+    volumes:
+    - .:/ncstate_ece566_spring2020
