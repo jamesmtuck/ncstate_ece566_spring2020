@@ -16,7 +16,7 @@ install:
   - docker-compose up 
 
 script: 
-  - docker-compose run projects bash ./travis-ci-test.sh
+  - docker-compose run ece566 bash ./travis-ci-test.sh
 
 after_script:
   - docker-compose stop
