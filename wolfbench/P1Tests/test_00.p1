@@ -1,0 +1,4 @@
+def test_00 [0];
+
+return = 16;
+
