@@ -8,7 +8,7 @@ popd
 pushd .
 cd projects && mkdir buildcpp && cd buildcpp && cmake -DUSE_CPP=1 -DLLVM_DIR=/usr/local/lib/cmake/llvm .. && cmake --build .
 popd
-make -C tutorials/1 clean all
+make -C tutorial/1 clean all
 #pushd .
 #mkdir p0-test && cd p0-test && ../wolfbench/configure && make all 
 #popd
