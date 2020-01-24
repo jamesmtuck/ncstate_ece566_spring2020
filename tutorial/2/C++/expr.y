@@ -1,5 +1,5 @@
 %{
-#include <stdio.h>
+#include <cstdio>
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Function.h"
@@ -13,7 +13,8 @@
 #include "llvm/Support/FileSystem.h"
 
 using namespace llvm;
-
+using namespace std;
+ 
 static LLVMContext TheContext;
 static IRBuilder<> Builder(TheContext);
 
@@ -22,6 +23,17 @@ int regCnt = 8;
 int yylex();
 int yyerror(const char *);
 
+
+// helper code 
+template<typename ... Args>
+std::string format_helper( const std::string& format, Args ... args )
+{
+    size_t size = snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
+    std::unique_ptr<char[]> buf( new char[ size ] ); 
+    snprintf( buf.get(), size, format.c_str(), args ... );
+    return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+}
+ 
 %}
 
 %token REG IMMEDIATE ASSIGN SEMI LPAREN RPAREN LBRACKET RBRACKET MINUS PLUS
@@ -132,12 +144,10 @@ int main() {
     // Build the return instruction for the function
     Builder.CreateRet(Builder.getInt32(0));
     
-    M->dump(); // dump module to screen for viewing/debugging
-
     //Write module to file
     std::error_code EC;
     raw_fd_ostream OS("main.bc",EC,sys::fs::F_None);  
-    WriteBitcodeToFile(M,OS);
+    WriteBitcodeToFile(*M,OS);
 
   } else {
     printf("There was a problem! Read error messages above.\n");
