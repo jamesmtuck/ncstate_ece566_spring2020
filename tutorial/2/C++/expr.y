@@ -43,10 +43,12 @@ std::string format_helper( const std::string& format, Args ... args )
 %union {
   int reg;
   int imm;
+  Value * val;
 }
 
-%type <reg> REG expr
+%type <reg> REG 
 %type <imm> IMMEDIATE
+%type <val> expr program
 
 %start program
 
@@ -54,7 +56,7 @@ std::string format_helper( const std::string& format, Args ... args )
 
 program: REG ASSIGN expr SEMI 
 {
-
+  $$ = $3;
 } 
 | program REG ASSIGN expr SEMI
 {
@@ -63,20 +65,19 @@ program: REG ASSIGN expr SEMI
 
 | program SEMI
 {
-  //Builder.CreateRet(Builder.getInt32(0));
+  Builder.CreateRet($1);
   return 0;
 }
 ;
 expr: 
  IMMEDIATE                 
  {
-   //$$ = Builder.getInt32($1);
+   $$ = Builder.getInt32($1);
    
    //ConstantInt *ci = dyn_cast<ConstantInt>($$);
    //if (ci != NULL) {
    //  printf("%ld\n", ci->getZExtValue());
    //}
-
  }
 | REG
  {
@@ -84,8 +85,7 @@ expr:
  }
 | expr PLUS expr  
  {
-
-
+   $$ = Builder.CreateAdd($1,$3);
  }
 
 | expr MINUS expr 
@@ -142,7 +142,7 @@ int main() {
     // all is good
 
     // Build the return instruction for the function
-    Builder.CreateRet(Builder.getInt32(0));
+    //Builder.CreateRet(Builder.getInt32(0));
     
     //Write module to file
     std::error_code EC;
