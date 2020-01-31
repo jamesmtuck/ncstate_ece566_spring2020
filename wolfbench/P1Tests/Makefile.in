@@ -31,7 +31,7 @@ programs = $(ece466) $(ece566)
 
 .PHONY: all install
 
-all: $(programs)
+all: $(addsuffix -build,$(programs))
 
 install: all $(addsuffix -install,$(programs))
 

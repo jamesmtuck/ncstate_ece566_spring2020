@@ -2,7 +2,7 @@
 .SUFFIXES: .tune.bc .opt.bc .link.bc .bc
 .PRECIOUS: .tune.bc
 
-.PHONY: %-install
+.PHONY: %-install %-build
 
 ifdef QUIET
 VERB:=@
