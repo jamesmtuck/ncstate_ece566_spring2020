@@ -11,14 +11,9 @@ VERB:=
 endif
 
 %: %.all.bc
-ifdef CLANG
 	$(VERB) $(CLANG) $(LIBS) $(HEADERS) -o $@ $^
-else
-	$(VERB) $(LLC) -o $(addsuffix .s,$@) $^
-	$(VERB) $(GCC) $(LIBS) $(HEADERS) -o $@ $(addsuffix .s,$@)	
-endif
 
-%.all.bc: %.bc %.p1.bc
+%.all.bc: main.bc %.p1.bc
 	$(VERB) $(LLVM_LINK) -o $@ $^	  
 
 %.p1.bc:%.p1
@@ -29,10 +24,10 @@ else
 endif
 
 clean:
-	$(VERB) rm -Rf *.bc $(programs) *-test
+	$(VERB) rm -Rf *.bc $(programs) *-test *.ll main.o
 
 %-test:
-	$(VERB) ./$* > $@ 
+	$(VERB) ./$* $SRC_DIR/$(addsuffix .data,$*) > $@ 
 
 %-install:
 	$(VERB) mkdir -p $(INSTALL_DIR)
