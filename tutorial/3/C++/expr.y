@@ -16,6 +16,7 @@ using namespace llvm;
 using namespace std;
  
 static LLVMContext TheContext;
+static Function *TheFunction;
 static IRBuilder<> Builder(TheContext);
 
 int regCnt = 8;
@@ -49,9 +50,9 @@ std::string format_helper( const std::string& format, Args ... args )
   Value * val;
 }
 
-//%type <id> IDENTIFIER 
-//%type <imm> IMMEDIATE
-//%type <val> expr stmt function
+%type <id> IDENTIFIER 
+%type <imm> IMMEDIATE
+%type <val> expr 
 
 
 %start program
@@ -59,6 +60,10 @@ std::string format_helper( const std::string& format, Args ... args )
 %%
 
 program : LBRACE stmtlist RETURN expr SEMI RBRACE
+{
+  Builder.CreateRet($4);
+  YYACCEPT;
+}
 ;
 
 stmtlist :    stmt
@@ -73,14 +78,33 @@ stmt:   IDENTIFIER ASSIGN expr SEMI              /* expression stmt */
 ;
 
 expr:   IDENTIFIER
-      | IMMEDIATE
-      | expr PLUS expr
-      | expr MINUS expr
-      | expr MULTIPLY expr
-      | expr DIVIDE expr
-      | MINUS expr
-      | NOT expr
-      | LPAREN expr RPAREN
+{
+
+}
+| IMMEDIATE
+ {
+   $$ = Builder.getInt32($1);
+ }
+| expr PLUS expr
+ {
+   $$ = Builder.CreateAdd($1,$3,"add");
+ }
+| expr MINUS expr
+{
+  $$ = Builder.CreateSub($1,$3,"sub");
+}
+| expr MULTIPLY expr
+| expr DIVIDE expr
+| MINUS expr
+{
+  $$ = Builder.CreateNeg($2,"neg");
+}
+| NOT expr
+
+| LPAREN expr RPAREN
+{
+  $$ = $2;
+}
 ;
 
 
@@ -97,12 +121,12 @@ int main() {
     FunctionType::get(Builder.getInt32Ty(),false);
   
   // Create a main function
-  Function *Function = Function::Create(FunType,  
+  TheFunction = Function::Create(FunType,  
 					GlobalValue::ExternalLinkage, "tutorial3",M);
   
   //Add a basic block to main to hold instructions
   BasicBlock *BB = BasicBlock::Create(TheContext, "entry",
-				      Function);
+				      TheFunction);
 
   // Ask builder to place new instructions at end of the
   // basic block

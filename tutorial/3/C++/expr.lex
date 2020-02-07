@@ -51,6 +51,7 @@ return                    { return RETURN; }
 "-"                       { return MINUS; }
 "*"                       { return MULTIPLY; }
 "/"                       { return DIVIDE; }
+"!"                       { return NOT; }
 
 "//"[^\n]*                
 
