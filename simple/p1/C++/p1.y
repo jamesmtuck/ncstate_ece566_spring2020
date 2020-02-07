@@ -41,10 +41,10 @@ map<string,Value*> idLookup;
   char *id;
 }
 
-%token ID NUM MINUS PLUS MULTIPLY DIVIDE LPAREN RPAREN SETQ SETF AREF MIN MAX ERROR MAKEARRAY
+%token IDENT NUM MINUS PLUS MULTIPLY DIVIDE LPAREN RPAREN SETQ SETF AREF MIN MAX ERROR MAKEARRAY
 
 %type <num> NUM 
-%type <id> ID
+%type <id> IDENT
 
 %start program
 
@@ -85,7 +85,7 @@ expr: LPAREN MINUS token_or_expr_list RPAREN
 {
   // IMPLEMENT
 }
-| LPAREN SETQ ID token_or_expr RPAREN
+| LPAREN SETQ IDENT token_or_expr RPAREN
 {
   // IMPLEMENT
 }
@@ -104,12 +104,12 @@ expr: LPAREN MINUS token_or_expr_list RPAREN
   // ECE 566 only
   // IMPLEMENT
 }
-| LPAREN AREF ID token_or_expr RPAREN
+| LPAREN AREF IDENT token_or_expr RPAREN
 {
   // IMPLEMENT
 
 }
-| LPAREN MAKEARRAY ID NUM token_or_expr RPAREN
+| LPAREN MAKEARRAY IDENT NUM token_or_expr RPAREN
 {
   // ECE 566 only
   // IMPLEMENT
@@ -138,7 +138,7 @@ token_or_expr :  token
 }
 ; 
 
-token:   ID
+token:   IDENT
 {
   /*if (idLookup.find($1) != idLookup.end())
     $$ = Builder.CreateLoad(idLookup[$1]);

@@ -33,7 +33,7 @@ int line=1;
 [\t ]        ;
 
 
-[a-zA-Z_][_a-zA-Z0-9]*  { yylval.id = strdup(yytext); return ID; } 
+[a-zA-Z_][_a-zA-Z0-9]*  { yylval.id = strdup(yytext); return IDENT; } 
 
 [0-9]+          
 

@@ -33,8 +33,17 @@ std::string format_helper( const std::string& format, Args ... args )
     snprintf( buf.get(), size, format.c_str(), args ... );
     return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
 }
+
+ Value * reg[8] = { nullptr };
+
+ struct somestuff {
+   int x;
+   Value *y;
+   double z;
+ };
  
 %}
+
 
 %token REG IMMEDIATE ASSIGN SEMI LPAREN RPAREN LBRACKET RBRACKET MINUS PLUS
 
@@ -57,10 +66,12 @@ std::string format_helper( const std::string& format, Args ... args )
 program: REG ASSIGN expr SEMI 
 {
   $$ = $3;
+  reg[$1] = $3;
 } 
 | program REG ASSIGN expr SEMI
 {
-
+  $$ = $4;
+  reg[$2] = $4;
 } 
 
 | program SEMI
@@ -81,7 +92,8 @@ expr:
  }
 | REG
  {
-
+   $$ = reg[$1];
+   // worried about: is reg[$1] a good value or is it junk?
  }
 | expr PLUS expr  
  {
@@ -90,10 +102,9 @@ expr:
 
 | expr MINUS expr 
  {
-
+   $$ = Builder.CreateSub($1,$3);
 
  }
-
 
 | LPAREN expr RPAREN 
  {
@@ -102,12 +113,13 @@ expr:
 
 | MINUS expr 
  {
-
+   $$ = Builder.CreateNeg($2);
  }
 
 | LBRACKET expr RBRACKET 
  {
-
+   Value *inttoptr = Builder.CreateIntToPtr($2,PointerType::get(Builder.getInt32Ty(),0));
+   $$ = Builder.CreateLoad(inttoptr);
  }
 
 ;
@@ -117,7 +129,7 @@ expr:
 int main() {
 
   // Make Module
-  Module *M = new Module("Tutorial1", TheContext);
+  Module *M = new Module("Tutorial2", TheContext);
   
   // Create void function type with no arguments
   FunctionType *FunType = 
@@ -134,6 +146,11 @@ int main() {
   // Ask builder to place new instructions at end of the
   // basic block
   Builder.SetInsertPoint(BB);
+
+  for(int i=0; i<8; i++)
+    {
+      reg[i] = Builder.getInt32(0);
+    }
   
   // Now we’re ready to make IR, call yyparse()
   
@@ -143,12 +160,16 @@ int main() {
 
     // Build the return instruction for the function
     //Builder.CreateRet(Builder.getInt32(0));
+
+    // Dump LLVM IR to the screen for debugging
+    M->print(errs(),nullptr,false,true);
+    
     
     //Write module to file
     std::error_code EC;
     raw_fd_ostream OS("main.bc",EC,sys::fs::F_None);  
     WriteBitcodeToFile(*M,OS);
-
+    
   } else {
     printf("There was a problem! Read error messages above.\n");
   }
