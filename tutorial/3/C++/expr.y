@@ -1,5 +1,8 @@
 %{
 #include <cstdio>
+#include <map>
+#include <string>
+  
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Function.h"
@@ -19,7 +22,6 @@ static LLVMContext TheContext;
 static Function *TheFunction;
 static IRBuilder<> Builder(TheContext);
 
-int regCnt = 8;
 
 int yylex();
 int yyerror(const char *);
@@ -34,6 +36,8 @@ std::string format_helper( const std::string& format, Args ... args )
     snprintf( buf.get(), size, format.c_str(), args ... );
     return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
 }
+
+map<string,Value*> idMap;
  
 %}
 
@@ -72,6 +76,21 @@ stmtlist :    stmt
 ;
 
 stmt:   IDENTIFIER ASSIGN expr SEMI              /* expression stmt */
+{
+// Look to see if we already allocated it
+  Value* var = NULL;
+  if (idMap.find($1)==idMap.end()) {
+     // We haven’t so make a spot on the stack
+    var = Builder.CreateAlloca(Builder.getInt32Ty(),   
+                               nullptr,$1);
+     // remember this location and associate it with $1
+    idMap[$1] = var;
+  } else {
+    var = idMap[$1];
+  }
+  // store $3 into $1’s location in memory
+  Builder.CreateStore($3,var);
+}
       | IF LPAREN expr RPAREN LBRACE stmtlist RBRACE   /*if stmt*/     
       | WHILE LPAREN expr RPAREN LBRACE stmtlist RBRACE /*while stmt*/
       | SEMI /* null stmt */
@@ -79,7 +98,7 @@ stmt:   IDENTIFIER ASSIGN expr SEMI              /* expression stmt */
 
 expr:   IDENTIFIER
 {
-
+  $$ = Builder.CreateLoad(idMap[$1],$1);
 }
 | IMMEDIATE
  {
@@ -100,7 +119,12 @@ expr:   IDENTIFIER
   $$ = Builder.CreateNeg($2,"neg");
 }
 | NOT expr
+{
+   Value *icmp = Builder.CreateICmpEQ($2,Builder.getInt32(0));
+   $$ = Builder.CreateSelect(icmp,Builder.getInt32(1), 
+                            Builder.getInt32(0));
 
+}
 | LPAREN expr RPAREN
 {
   $$ = $2;
