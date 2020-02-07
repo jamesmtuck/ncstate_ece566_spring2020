@@ -98,7 +98,7 @@ int main() {
   
   // Create a main function
   Function *Function = Function::Create(FunType,  
-					GlobalValue::ExternalLinkage, "main",M);
+					GlobalValue::ExternalLinkage, "tutorial3",M);
   
   //Add a basic block to main to hold instructions
   BasicBlock *BB = BasicBlock::Create(TheContext, "entry",

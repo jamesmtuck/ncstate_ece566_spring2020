@@ -7,11 +7,39 @@ int regCnt=10;
 #include "llvm-c/BitReader.h"
 #include "llvm-c/BitWriter.h"
 
+#include "uthash.h"
+
 void yyerror(const char*);
 int yylex();
 
 static LLVMBuilderRef  Builder;
 
+struct TmpMap{
+  char *key;                /* key */
+  void *val;                /* data */
+  UT_hash_handle hh;        /* makes this structure hashable */
+};
+ 
+
+struct TmpMap *map = NULL;    /* important! initialize to NULL */
+
+void map_insert(char *key, void* val) { 
+  struct TmpMap *s; 
+  s = malloc(sizeof(struct TmpMap)); 
+  s->key = strdup(key); 
+  s->val = val; 
+  HASH_ADD_KEYPTR( hh, map, s->key, strlen(s->key), s ); 
+}
+
+void * map_find(char *tmp) {
+  struct TmpMap *s;
+  HASH_FIND_STR( map, tmp, s );  /* s: output pointer */
+  if (s) 
+    return s->val;
+  else 
+    return NULL; // returns NULL if not found
+}
+ 
 %}
 
 %token IF WHILE RETURN IDENTIFIER IMMEDIATE ASSIGN SEMI LPAREN RPAREN LBRACE RBRACE MINUS PLUS MULTIPLY DIVIDE NOT
@@ -68,7 +96,7 @@ int main() {
   LLVMTypeRef IntFnTy = LLVMFunctionType(LLVMInt32Type(),NULL,0,0);
   
   // Make a void function named main (the start of the program!)
-  LLVMValueRef Fn = LLVMAddFunction(Module,"main",IntFnTy);
+  LLVMValueRef Fn = LLVMAddFunction(Module,"tutorial3",IntFnTy);
 
   // Add a basic block to main to hold new instructions
   LLVMBasicBlockRef BB = LLVMAppendBasicBlock(Fn,"entry");
