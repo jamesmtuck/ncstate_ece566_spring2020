@@ -38,6 +38,8 @@ std::string format_helper( const std::string& format, Args ... args )
 }
 
 map<string,Value*> idMap;
+
+BasicBlock *BBjoin = nullptr;
  
 %}
 
@@ -52,6 +54,7 @@ map<string,Value*> idMap;
   char *id;
   int imm;
   Value * val;
+  BasicBlock *bb;
 }
 
 %type <id> IDENTIFIER 
@@ -91,7 +94,23 @@ stmt:   IDENTIFIER ASSIGN expr SEMI              /* expression stmt */
   // store $3 into $1’s location in memory
   Builder.CreateStore($3,var);
 }
-      | IF LPAREN expr RPAREN LBRACE stmtlist RBRACE   /*if stmt*/     
+      | IF LPAREN expr RPAREN
+      {
+	BasicBlock *then = BasicBlock::Create(TheContext,"if.then",TheFunction);
+	BasicBlock *join = BasicBlock::Create(TheContext,"if.join",TheFunction);
+
+	Value *icmp = Builder.CreateICmpNE($3,Builder.getInt32(0),"icmp.if");
+	Builder.CreateCondBr(icmp,then,join);
+
+	Builder.SetInsertPoint(then);
+	$<bb>$ = join;
+      }
+      LBRACE stmtlist RBRACE   /*if stmt*/
+      {
+	Builder.CreateBr($<bb>5);
+	Builder.SetInsertPoint($<bb>5);
+
+      }
       | WHILE LPAREN expr RPAREN LBRACE stmtlist RBRACE /*while stmt*/
       | SEMI /* null stmt */
 ;
@@ -113,7 +132,13 @@ expr:   IDENTIFIER
   $$ = Builder.CreateSub($1,$3,"sub");
 }
 | expr MULTIPLY expr
+{
+  $$ = Builder.CreateMul($1,$3,"mul");
+}
 | expr DIVIDE expr
+{
+  $$ = Builder.CreateSDiv($1,$3,"sdiv");
+}
 | MINUS expr
 {
   $$ = Builder.CreateNeg($2,"neg");
