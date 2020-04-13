@@ -29,10 +29,10 @@ using namespace llvm;
 #include "CSE.h"
 
 static cl::opt<std::string>
-InputFilename(cl::Positional, cl::desc("<input bitcode>"), cl::init("-"));
+InputFilename(cl::Positional, cl::desc("<input bitcode>"), cl::Required, cl::init("-"));
 
 static cl::opt<std::string>
-OutputFilename(cl::Positional, cl::desc("<output bitcode>"), cl::init("out.bc"));
+OutputFilename(cl::Positional, cl::desc("<output bitcode>"), cl::Required, cl::init("out.bc"));
 
 static cl::opt<bool>
 Mem2Reg("mem2reg",
